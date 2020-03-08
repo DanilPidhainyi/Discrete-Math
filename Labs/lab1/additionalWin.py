@@ -3,8 +3,6 @@ import copy
 
 # Варіант 24 ∪ ∩ ¯
 
-set_U = set(range(255))
-
 
 def union_set(set1, set2):
     return set1.union(set2)
@@ -14,7 +12,7 @@ def difference_set(set1, set2):
     return set1.difference(set2)
 
 
-def not_set(myset):
+def not_set(myset, set_U):
     return difference_set(set_U, myset)
 
 
@@ -27,12 +25,12 @@ def create_win(title):
     return win
 
 
-def second_window():
+def second_window(set_ABC, set_U):
     res = "Preliminary result"
-    step = ["B ∩ !C", set_ABC[1], not_set(set_ABC[2]), difference_set(set_ABC[1], not_set(set_ABC[2])),
-            "!A ∩ C", not_set(set_ABC[0]), set_ABC[2], difference_set(not_set(set_ABC[0]), set_ABC[2]),
+    step = ["B ∩ !C", set_ABC[1], not_set(set_ABC[2], set_U), difference_set(set_ABC[1], not_set(set_ABC[2], set_U)),
+            "!A ∩ C", not_set(set_ABC[0], set_U), set_ABC[2], difference_set(not_set(set_ABC[0], set_U), set_ABC[2]),
             "A ∩ B", set_ABC[0], set_ABC[2], difference_set(set_ABC[0], set_ABC[2]),
-            "!A ∪ B", not_set(set_ABC[0]), set_ABC[1], union_set(not_set(set_ABC[0]), set_ABC[1])]
+            "!A ∪ B", not_set(set_ABC[0], set_U), set_ABC[1], union_set(not_set(set_ABC[0], set_U), set_ABC[1])]
 
     step.extend([res + " ∪ !C", step[15], set_ABC[2], union_set(step[15], set_ABC[2])])
     step.extend([res + " ∪ (B ∩ !C)", step[19], step[3], union_set(step[19], step[3])])
@@ -43,21 +41,21 @@ def second_window():
     Window23(set_ABC, "Second Window", step, "D = !A ∪ B ∪ !C ∪ (B ∩ !C) ∪ (!A ∩ C) ∪ (A ∩ B)")
 
 
-def third_window():
+def third_window(set_ABC, set_U):
     res = "Preliminary result"
-    step = ["!A ∪ B", not_set(set_ABC[0]), set_ABC[1], union_set(not_set(set_ABC[0]), set_ABC[1])]
+    step = ["!A ∪ B", not_set(set_ABC[0], set_U), set_ABC[1], union_set(not_set(set_ABC[0], set_U), set_ABC[1])]
     step.extend([res + " ∪ !C", step[3], set_ABC[2], union_set(step[3], set_ABC[2])])
     step.extend(["Астанавітесь", "D", "D", step[-1]])
 
     Window23(set_ABC, "Third Window", step, "D = !A ∪ B ∪ !C")
 
 
-def fourth_window():
-    Window4(*set_ABC)
+def fourth_window(set_ABC, set_U):
+    Window4(not_set(set_ABC[0], set_U), not_set(set_ABC[1], set_U))
 
 
-def fifth_window():
-    Window5(*set_ABC)
+def fifth_window(set_ABC, set_U):
+    Window5(not_set(set_ABC[0], set_U), not_set(set_ABC[1], set_U))
 
 
 class Window23:
@@ -105,24 +103,23 @@ class Window23:
 
 class Window4:
 
+    def __init__(self, X, Y):
+        self.Z = union_set(X, Y)
+        self.win = create_win("Fourth Window")
+        Label(self.win, text="X = !B Y = !A Z = X ∪ Y",
+              font="Arial 11 bold", justify=LEFT, bg="#3C3F41", fg="white", bd=10).place(relx=0.5, rely=0.1,
+                                                                                         anchor=CENTER)
+        Button(self.win, text="Записати у файл", command=self.in_file).place(relx=0.5, rely=0.9, anchor=CENTER)
+        text_set = Text(self.win, width=85, height=30, font="Arial 12 bold")
+        text_set.insert(1.0, "X = {} \n\n Y = {} \n\n Z = {}".format(X, Y, self.Z))
+        text_set.place(relx=0.5, rely=0.5, anchor=CENTER)
+        self.win.mainloop()
+
     def in_file(self):
         with open("Fourth Window.txt", "w+") as f:
             f.write(str(self.Z))
-
-    def __init__(self, A, B, *x):
-        self.X = not_set(B)
-        self.Y = not_set(A)
-        self.Z = union_set(self.X, self.Y)
-        self.win = create_win("Fourth Window")
-        leb = Label(self.win, text="X = !B Y = !A Z = X ∪ Y",
-                    font="Arial 11 bold", justify=LEFT, bg="#3C3F41", fg="white", bd=10)
-        leb.place(relx=0.5, rely=0.1, anchor=CENTER)
-        but = Button(self.win, text="Записати у файл", command=self.in_file)
-        but.place(relx=0.5, rely=0.9, anchor=CENTER)
-        text_set = Text(self.win, width=85, height=30, font="Arial 12 bold")
-        text_set.insert(1.0, "X = {} \n\n Y = {} \n\n Z = {}".format(self.X, self.Y, self.Z))
-        text_set.place(relx=0.5, rely=0.54, anchor=CENTER)
-        self.win.mainloop()
+        Label(self.win, text="ЗАПИСАНО", font="Arial 11 bold", justify=LEFT, bg="#3C3F41", fg="green", bd=10).place(
+            relx=0.8, rely=0.9, anchor=CENTER)
 
 
 def read_in(title):
@@ -135,14 +132,12 @@ def read_in(title):
 
 class Window5:
 
-    def __init__(self, A, B, *x):
-        self.X = not_set(B)
-        self.Y = not_set(A)
+    def __init__(self, X, Y):
+        self.Z = X.union(Y)
         self.win = create_win("Fifth Window")
-        butt_read = Button(self.win, text="Почати зчитування", command=read)
-        butt_read.place(relx=0.5, rely=0.05, anchor=CENTER)
-        butt_union = Button(self.win, text="Знайти Z", command=self.pythonZ)
-        butt_union.place(relx=0.5, rely=0.1, anchor=CENTER)
+        Button(self.win, text="Почати зчитування", command=self.printSet).place(relx=0.5, rely=0.05, anchor=CENTER)
+        Button(self.win, text="Знайти Z", command=self.pythonZ).place(relx=0.4, rely=0.1, anchor=CENTER)
+        Button(self.win, text="Порівняти", command=self.tester).place(relx=0.6, rely=0.1, anchor=CENTER)
         leb = Label(self.win,
                     text="Не оптимізов.: {0}Оптимізований: {0}Множина Z: {0}Множина \n  X ∪ Y: ".format("\n" * 6),
                     font="Arial 13 bold", justify=LEFT, bg="#3C3F41", fg="white", bd=12)
@@ -150,30 +145,21 @@ class Window5:
         self.win.mainloop()
 
     def printSet(self):
-        set_min_full_Z = iter(read_in("Second Window"), read_in("Third Window"), read_in("Fourth Window"))
+        global scan_set2
+        scan_set = map(read_in, ("Second Window", "Third Window", "Fourth Window"))
+        scan_set2 = copy.deepcopy(scan_set)
         text = [Text(self.win, width=60, height=5, font="Arial 12 bold") for i in range(3)]
-        tuple(map(lambda x: x.insert(1.0, next(set_min_full_Z)), text))
+        tuple(map(lambda x: x.insert(1.0, next(scan_set)), text))
         tuple(map(lambda x, y: x.place(relx=0.65, rely=0.23 + y / 8, anchor=CENTER), text, range(len(text))))
 
     def pythonZ(self):
         text = Text(self.win, width=60, height=5, font="Arial 12 bold")
-        text.insert(1.0, self.X.union(self.Y))
+        text.insert(1.0, self.Z)
         text.place(relx=0.65, rely=0.63, anchor=CENTER)
 
     def tester(self):
-        return Label(self.win, text="Не оптимізований = Оптимізований {0}\n Множина Z = Множина X ∪ Y {1} ".format(
-            lambda x, y: x == y, ),
+        return Label(self.win, text="Не оптимізований = Оптимізований {0}\n\n Множина Z = Множина X ∪ Y {1} ".format(
+            set(next(scan_set2)) == set(next(scan_set2)), set(next(scan_set2)) == self.Z),
                      font="Arial 13 bold", justify=LEFT, bg="#3C3F41", fg="white", bd=12).place(relx=0.5, rely=0.8,
                                                                                                 anchor=CENTER)
 
-
-# ОБЕРЕЖНО
-
-set_ABC = [{' 71', ' 194', ' 155', ' 158', ' 203', ' 88', ' 36', ' 29', '96'},
-           {' 218', '161', ' 83', ' 228', ' 167', ' 145', ' 6', ' 79'},
-           {' 247', ' 94', ' 14', ' 47', ' 208', ' 150', '170'}]
-
-second_window()
-third_window()
-fourth_window()
-fifth_window()
